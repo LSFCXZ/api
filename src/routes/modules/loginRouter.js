@@ -9,4 +9,6 @@ router.post('/forget', loginController.forget)
 router.post('/ver', loginController.verification)
 //登录
 router.post('/login', loginController.login)
+//注册
+router.post('/reg', loginController.reg)
 export default router

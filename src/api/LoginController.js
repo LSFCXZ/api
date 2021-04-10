@@ -4,6 +4,8 @@ import jsonwebtoken from 'jsonwebtoken'
 import { setValue, getValue } from '../config/RedisConfig'
 import config from '../config'
 import { cheackCode } from '../common/utils'
+import User from '../model/User'
+import bcrypt from 'bcryptjs'
 class LoginController {
   constructor() {
 
@@ -62,17 +64,22 @@ class LoginController {
     const result = await cheackCode(sid, code)
     if (result) {
       //验证用户名密码
-      const checkpassword = ''
+      let checkpassword = false
+      const user = await User.findOne({ username: body.username })
+      // 解密比对
+      if (await bcrypt.compare(body.password, user.password)) {
+        checkpassword = true
+      }
       if (checkpassword) {
         // 生成Tonken,有效期1d=>1天
-        const token = jsonwebtoken.sign({ _id: 'userObj._id' }, config.JWT_SECRET, {
+        const token = jsonwebtoken.sign({ _id: '6071242df2fcfb19148c0942' }, config.JWT_SECRET, {
           expiresIn: '1d'
         })
         ctx.body = {
           code: 200,
-          token: token
+          token: token,
+          msg: '登录成功'
         }
-        console.log(OK);
       } else {
         ctx.body = {
           code: 404,
@@ -88,7 +95,65 @@ class LoginController {
   }
   //注册
   async reg (ctx) {
-
+    // 接受用户数据
+    const { body } = ctx.request
+    const sid = body.sid
+    const uid = body.uid
+    const vcode = body.vcode
+    const code = body.code
+    // console.log('vcode is a' + vcode);
+    // console.log('uid is a' + uid);
+    // 这里msg是返回前端显示的格式
+    const msg = {}
+    // 验证图片验证码的时效性、正确性
+    const result = await cheackCode(sid, code)
+    // 验证邮箱验证码的时效性、正确性
+    const result1 = await cheackCode(uid, vcode)
+    // 判断注册用户是否被注册
+    let check = true
+    //在图片验证和邮箱验证通过的情况下
+    if (result && result1) {
+      // 校验username
+      const user1 = await User.findOne({ username: body.username })
+      if (user1 !== null && typeof user1.username !== 'undefined') {
+        // 这里的username对应前端的username，方便显示在对应位置
+        msg.username = ['此邮箱已经被注册,请登录']
+        check = false
+      }
+      // 校验name
+      const user2 = await User.findOne({ username: body.username })
+      if (user2 !== null && typeof user2.name !== 'undefined') {
+        msg.name = ['此昵称已经被使用，请修改']
+        check = false
+      }
+      // 写入数据库
+      if (check) {
+        // 给密码加密，bcrypt
+        body.password = await bcrypt.hash(body.password, 10)
+        const user = new User({
+          username: body.username,
+          name: body.name,
+          password: body.password,
+          // 创建用户时间
+          created: moment().format('YYYY-MM-DD HH:mm:ss')
+        })
+        const result = await user.save()
+        ctx.body = {
+          code: 200,
+          data: result,
+          msg: '注册成功'
+        }
+        return
+      }
+    } else if (result1 === false) {
+      msg.vcode = ['邮箱验证码错误，请重新检查']
+    } else if (result == false) {
+      msg.code = ['验证码错误']
+    }
+    ctx.body = {
+      code: 500,
+      msg: msg
+    }
   }
 }
 export default new LoginController()
