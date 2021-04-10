@@ -71,13 +71,20 @@ class LoginController {
         checkpassword = true
       }
       if (checkpassword) {
+        // 排除一些敏感数据
+        const userObj = user.toJSON()
+        const arr = ['password', 'username']
+        arr.map((item) => {
+          return delete userObj[item]
+        })
         // 生成Tonken,有效期1d=>1天
-        const token = jsonwebtoken.sign({ _id: '6071242df2fcfb19148c0942' }, config.JWT_SECRET, {
+        const token = jsonwebtoken.sign({ _id: userObj._id }, config.JWT_SECRET, {
           expiresIn: '1d'
         })
         ctx.body = {
           code: 200,
           token: token,
+          data: userObj,
           msg: '登录成功'
         }
       } else {

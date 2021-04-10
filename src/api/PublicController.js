@@ -18,8 +18,7 @@ class PublicController {
     setValue(body.sid, newCaptcha.text, 10 * 60)
     ctx.body = {
       code: 200,
-      data: newCaptcha.data,
-      text: newCaptcha.text
+      data: newCaptcha.data
     }
   }
 
