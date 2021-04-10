@@ -1,9 +1,10 @@
 import svgCaptcha from 'svg-captcha'
 import send from '../config/MailConfig'
 import moment from 'dayjs'
-import { setValue } from '../config/RedisConfig'
+import { setValue, getValue } from '../config/RedisConfig'
 class PublicController {
   async getCaptcha (ctx) {
+    const body = ctx.request.query
     // 定义svg验证码的格式
     const newCaptcha = svgCaptcha.create({
       size: 4,
@@ -13,6 +14,8 @@ class PublicController {
       width: 150,
       height: 38
     })
+    //保存验证码10分钟
+    setValue(body.sid, newCaptcha.text, 10 * 60)
     ctx.body = {
       code: 200,
       data: newCaptcha.data,
@@ -20,25 +23,5 @@ class PublicController {
     }
   }
 
-  // // 注册邮箱验证码
-  // async getMailCode (ctx) {
-  //   const { body } = ctx.request
-  //   const result = await send({
-  //     type: 'vercode',
-  //     data: {
-  //       key: key,
-  //       username: body.username
-  //     },
-  //     expire: moment()
-  //       .add(30, 'minutes')
-  //       .format('YYYY-MM-DD HH:mm:ss'),
-  //     email: body.username,
-  //     user: body.user //user.name ? user.name : body.username
-  //   })
-  //   ctx.body = {
-  //     code: 200,
-  //     data: result
-  //   }
-  // }
 }
 export default new PublicController()

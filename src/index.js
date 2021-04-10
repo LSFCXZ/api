@@ -7,11 +7,17 @@ import koastatic from 'koa-static'
 import path from 'path'
 import compose from 'koa-compose'
 import compress from 'koa-compress'
+import JWT from 'koa-jwt'
+import config from './config/index'
+import ErrorHandler from './common/ErrorHandle'
 import routes from './routes/routes'
 const app = new koa()
 
 // 判断是否为开发模式，是则true，否则false
 const isDevMode = process.env.NODE_ENV !== 'production'
+
+// 不需要jwt鉴权的路径
+const jwt = JWT({ secret: config.JWT_SECRET }).unless({ path: [/^\/public/, /^\/login/] })
 
 /**
  * 使用koa-compose集成中间件
@@ -22,6 +28,8 @@ const middleware = compose([
   cors(),
   json(),
   helmet(),
+  ErrorHandler,
+  jwt
 ])
 /**
  * 生产模式压缩中间件

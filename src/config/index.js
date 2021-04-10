@@ -5,6 +5,8 @@ const REDIS = {
   port: 15001,
   password: '766402'
 }
+const JWT_SECRET = '&Vi%33pG2mD51xMo%OUOTo$ZWOa3TYt328tcjXtW9&hn%AOb9quwaZaRMf#f&44c'
 export default {
-  REDIS
+  REDIS,
+  JWT_SECRET
 }
